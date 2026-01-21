@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VocaForest 카드 뒤집기 스킵</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        /* 헤더 */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 15px;
+        }
+
+        /* 카드 공통 */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            font-size: 22px;
+        }
+
+        /* 북마크릿 버튼 */
+        .bookmarklet-section {
+            text-align: center;
+        }
+
+        .bookmarklet {
+            display: inline-block;
+            padding: 18px 48px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: grab;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .bookmarklet:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.5);
+        }
+
+        .bookmarklet:active {
+            cursor: grabbing;
+        }
+
+        .drag-hint {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .drag-hint span {
+            display: inline-block;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+
+        /* 영상 섹션 */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            /* 16:9 비율 */
+            background: #f0f0f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .video-wrapper iframe,
+        .video-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .video-placeholder .play-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        /* 사용 방법 */
+        .steps-list {
+            list-style: none;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .step-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content strong {
+            color: #1a1a2e;
+        }
+
+        .step-content p {
+            color: #555;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .step-content .sub-text {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* 팁 박스 */
+        .tip-box {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 16px 20px;
+            border-radius: 0 12px 12px 0;
+            margin-top: 20px;
+        }
+
+        .tip-box .tip-title {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .tip-box p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .tip-box code {
+            background: #e8ebff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        /* 모바일 안내 */
+        .mobile-section .step-item {
+            align-items: flex-start;
+        }
+
+        /* 코드 복사 영역 */
+        .code-box {
+            margin-top: 8px;
+        }
+
+        .code-text {
+            word-break: break-all;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 10px;
+            line-height: 1.4;
+            color: #555;
+            margin: 0;
+        }
+
+        .copy-btn {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #5567d5;
+        }
+
+        .copy-btn:active {
+            background: #4455c0;
+        }
+
+        /* 푸터 */
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <h1>VocaForest 카드 뒤집기 단계를 더 빠르게!</h1>
+            <p>카드 뒤집기 후 문장 확인과 버튼 클릭을 바로 할 수 있습니다</p>
+        </div>
+
+        <!-- 북마크릿 버튼 -->
+        <div class="card bookmarklet-section">
+            <a class="bookmarklet"
+                href="javascript:(function(){const run=()=>{document.querySelectorAll('.choice-btn.disabled').forEach(b=>b.classList.remove('disabled'));document.querySelectorAll('.sentence-content[data-hidden=true]').forEach(el=>el.dataset.hidden='false')};run();new MutationObserver(run).observe(document.body,{childList:true,subtree:true});alert('스킵 활성화 완료!')})();">
+                ⚡ SKIP
+            </a>
+            <p class="drag-hint"><span>↑</span> 이 버튼을 북마크바로 드래그하세요</p>
+        </div>
+
+        <!-- PC 사용 방법 -->
+        <div class="card">
+            <div class="card-title">
+                <span class="icon">💻</span>
+                PC에서 사용하는 방법
+            </div>
+            <!-- PC 사용법 영상 -->
+            <div class="video-wrapper" style="margin-bottom: 20px;">
+                <!-- PC 영상 URL을 여기에 넣으세요 -->
+                <!-- 예시: <iframe src="https://www.youtube.com/embed/VIDEO_ID"></iframe> -->
+                <!-- 예시: <video src="pc-demo.mp4" controls></video> -->
+                <div class="video-placeholder">
+                    <span class="play-icon">▶️</span>
+                    <span>PC 사용법 영상</span>
+                </div>
+            </div>
+            <ol class="steps-list">
+                <li class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <p><strong>북마크바 표시하기</strong></p>
+                        <p class="sub-text">북마크바가 보이지 않으면 먼저 켜주세요</p>
+                        <p class="sub-text">
+                            Windows: <code>Ctrl + Shift + B</code><br>
+                            Mac: <code>Cmd + Shift + B</code>
+                        </p>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <p><strong>SKIP 버튼을 북마크바로 드래그</strong></p>
+                        <p class="sub-text">위의 초록색 SKIP 버튼을 마우스로 끌어서 북마크바에 놓으세요</p>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <p><strong>VocaForest 사이트 접속 및 로그인</strong></p>
+                        <p class="sub-text">학습할 단어장을 선택하고 카드 학습을 시작하세요</p>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <p><strong>북마크바에서 SKIP 클릭</strong></p>
+                        <p class="sub-text">"스킵 활성화 완료!" 알림이 뜨면 성공입니다</p>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <p><strong>대기시간 없이 학습하기</strong></p>
+                        <p class="sub-text">이제 문장 확인과 버튼 클릭을 바로 할 수 있습니다</p>
+                    </div>
+                </li>
+                <div class="tip-box">
+                    <div class="tip-title">⚠️ 알아두세요</div>
+                    <p>페이지를 새로고침하면 저장해둔 북마크를 다시 실행해야해요</p>
+                </div>
+            </ol>
+        </div>
+
+        <!-- 모바일 사용 방법 -->
+        <div class="card mobile-section">
+            <div class="card-title">
+                <span class="icon">📱</span>
+                모바일에서 사용하는 방법
+            </div>
+            <!-- 모바일 사용법 영상 -->
+            <div class="video-wrapper" style="margin-bottom: 20px;">
+                <!-- 모바일 영상 URL을 여기에 넣으세요 -->
+                <!-- 예시: <iframe src="https://www.youtube.com/embed/VIDEO_ID"></iframe> -->
+                <!-- 예시: <video src="mobile-demo.mp4" controls></video> -->
+                <div class="video-placeholder">
+                    <span class="play-icon">▶️</span>
+                    <span>모바일 사용법 영상</span>
+                </div>
+            </div>
+            <ol class="steps-list">
+                <li class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <p><strong>임시로 북마크 하나를 추가해주세요.</strong></p>
+                        <p class="sub-text">
+                            Safari: 공유 버튼 → 북마크 추가하기<br>
+                            Chrome: 메뉴(⋮) 버튼 → 별표(☆) 아이콘 클릭하기
+                        </p>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <p><strong>북마크 편집하기</strong></p>
+                        <p class="sub-text">
+                            저장한 북마크를 찾아 <strong>편집</strong>을 누르세요.<br>
+                            URL 부분을 <strong>전체 삭제</strong>하고 아래 코드를 붙여넣기 하세요:
+                        </p>
+                        <div class="code-box">
+                            <p class="code-text" id="bookmarklet-code">javascript:(function(){const
+                                run=()=>{document.querySelectorAll('.choice-btn.disabled').forEach(b=>b.classList.remove('disabled'));document.querySelectorAll('.sentence-content[data-hidden=true]').forEach(el=>el.dataset.hidden='false')};run();new
+                                MutationObserver(run).observe(document.body,{childList:true,subtree:true});alert('스킵 활성화
+                                완료!')})();</p>
+                            <button class="copy-btn" onclick="copyCode()">복사</button>
+                        </div>
+                    </div>
+                </li>
+                <li class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <p><strong>VocaForest에서 실행하기</strong></p>
+                        <p class="sub-text">
+                            VocaForest 카드 학습 페이지에서<br>
+                            저장해둔 북마크 실행하기
+                        </p>
+                    </div>
+                </li>
+            </ol>
+
+            <div class="tip-box">
+                <div class="tip-title">⚠️ 알아두세요</div>
+                <p>페이지를 새로고침하면 저장해둔 북마크를 다시 실행해야해요</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = document.getElementById('bookmarklet-code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '복사완료!';
+                setTimeout(() => btn.textContent = '복사', 1500);
+            });
+        }
+    </script>
+</body>
+
+</html>
